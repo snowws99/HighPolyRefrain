@@ -1,2 +1,2 @@
 # HighPolyRefrain
-Recompilation project of High-poly addon for PMX
+Recompilation project of High-poly addon for PMX Editor
