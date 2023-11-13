@@ -15,25 +15,55 @@ namespace PECSScriptPlugin
 {
 	internal class mainForm : Form
 	{
-		private IPEPluginHost host;
+        /// <summary>
+        /// Gets or sets the host interface for the PMX plugin.
+        /// </summary>
+        private IPEPluginHost host { get; set; }
 
-		private IPXPmxBuilder bdx;
+        /// <summary>
+        /// Gets or sets the PMX builder interface for constructing PMX models.
+        /// </summary>
+        private IPXPmxBuilder bdx { get; set; }
 
-		private IPEConnector connect;
+        /// <summary>
+        /// Gets or sets the connector interface for interacting with PMX model data.
+        /// </summary>
+        private IPEConnector connect { get; set; }
 
-		private IPEPMDViewConnector view;
+        /// <summary>
+        /// Gets or sets the connector interface for interacting with PMD views.
+        /// </summary>
+        private IPEPMDViewConnector view { get; set; }
 
-		private IPXPmx pmx;
+        /// <summary>
+        /// Gets or sets the PMX model interface.
+        /// </summary>
+        private IPXPmx pmx { get; set; }
 
-		private IList<IPXVertex> vertex;
+        /// <summary>
+        /// Gets or sets the list of vertices in the PMX model.
+        /// </summary>
+        private IList<IPXVertex> vertex { get; set; }
 
-		private IList<IPXMaterial> material;
+        /// <summary>
+        /// Gets or sets the list of materials in the PMX model.
+        /// </summary>
+        private IList<IPXMaterial> material { get; set; }
 
-		private IList<IPXMorph> morph;
+        /// <summary>
+        /// Gets or sets the list of morphs in the PMX model.
+        /// </summary>
+        private IList<IPXMorph> morph { get; set; }
 
-		private IPEPmd pmd;
+        /// <summary>
+        /// Gets or sets the PMD interface for handling PMD-specific operations.
+        /// </summary>
+        private IPEPmd pmd { get; set; }
 
-		private IList<int> face;
+        /// <summary>
+        /// Gets or sets the list of face indices in the PMX model.
+        /// </summary>
+        private IList<int> face { get; set; }
 
 
         private GroupBox groupBoxModes;
@@ -82,24 +112,32 @@ namespace PECSScriptPlugin
             Dictionary<CVSet, CVDat> dictionary9 = new Dictionary<CVSet, CVDat>();
             Dictionary<CVSet, CVDat> dictionary10 = new Dictionary<CVSet, CVDat>();
 
-            //Count face indices
+            // Count face indices
             for (int i = 0; i < faces; i++)
             {
+                // Divide each selected face index by 3 and add it to the faceIndiceList
                 faceIndiceList.Add(selectedFaceIndices[i * 3] / 3);
             }
+            // Sort the list of face indices
             faceIndiceList.Sort();
-            
+
+            // Initialize variables for material processing
             int count = material.Count;
             int materialIndice = 0;
             int j = material[materialIndice].Faces.Count();
-            //clone selected materials
+
+            // Clone selected materials
             foreach (int faceIndice in faceIndiceList)
             {
+                // Adjust index to the appropriate material
                 for (; faceIndice >= j; j += material[++materialIndice].Faces.Count)
                 {
                 }
+
+                // Check if the material is not already in the materialsDictionary
                 if (!materialsDictionary.ContainsKey(material[materialIndice]))
                 {
+                    // Clone the material and adjust its name based on the selected radio button
                     IPXMaterial iPXMaterial = (IPXMaterial)material[materialIndice].Clone();
                     if (radioButtonSoft.Checked)
                     {
@@ -111,19 +149,28 @@ namespace PECSScriptPlugin
                         iPXMaterial.Name += "x2";
                         iPXMaterial.NameE += "x2";
                     }
+                    // Clear the faces of the cloned material
                     iPXMaterial.Faces.Clear();
+                    // Add the cloned material to the original material list
                     material.Add(iPXMaterial);
+                    // Add the original and cloned materials to the materialsDictionary
                     materialsDictionary.Add(material[materialIndice], material[material.Count - 1]);
                 }
             }
-            
+
+            // Update PMDViewHelper to select materials
             connect.View.PMDViewHelper.PartsSelect.SelectObject = PartsSelectObject.Material;
+
+            // Create an array of indices for the newly added materials
             int[] array = new int[material.Count - count];
             for (int k = 0; k < material.Count - count; k++)
             {
                 array[k] = count + k;
             }
+
+            // Set the checked material indices in PMDViewHelper
             connect.View.PMDViewHelper.PartsSelect.SetCheckedMaterialIndices(array);
+
 
 
 
@@ -137,85 +184,126 @@ namespace PECSScriptPlugin
 
             foreach (int faceIndice in faceIndiceList)
             {
+                // Iterate through the three vertices of the current face
                 for (int l = 0; l < 3; l++)
                 {
+                    // Create a CVSet object representing the current vertex
                     CVSet cVSet = new CVSet(vertex[face[3 * faceIndice + l]]);
+
+                    // Check if the CVSet is already in cvDatDictionary1, skip if true
                     if (cvDatDictionary1.ContainsKey(cVSet))
                         continue;
 
+                    // Add the CVSet to cvDatDictionary1 and create a corresponding CVDat entry
                     cvDatDictionary1.Add(cVSet, new CVDat(vertex[face[3 * faceIndice + l]]));
 
                     if (checkBoxMergeDuplicates.Checked && checkBoxMergeDuplicates.Enabled)
                     {
+                        // Create a CVPosKey representing the position of the current vertex
                         CVPosKey key = new CVPosKey(vertex[face[3 * faceIndice + l]]);
+
                         if (!duplicatesDictionary.ContainsKey(key))
                         {
                             duplicatesDictionary.Add(key, new CVSet());
                         }
+
+                        // Add the current CVSet to the CVSet collection associated with the key
                         duplicatesDictionary[key].Add(cVSet);
                     }
                 }
             }
 
+
+            // Iterate through each morph in the morph list
             foreach (IPXMorph morphItem in morph)
             {
+                // Process vertex morphs
                 if (morphItem.IsVertex)
                 {
+                    // Iterate through each vertex morph offset in the morph
                     foreach (IPXVertexMorphOffset morphOffset in morphItem.Offsets)
                     {
+                        // Create a CVSet as a key for the current morph offset's vertex
                         CVSet cvkey = new CVSet(morphOffset.Vertex);
+
+                        // Check if the CVSet key is present in cvDatDictionary1
                         if (cvDatDictionary1.ContainsKey(cvkey))
                         {
+                            // Check if the morph is already recorded for the current CVSet
                             if (!cvDatDictionary1[cvkey].m_VMO.ContainsKey(morphItem))
                             {
+                                // If not, add a new entry for the morph with its offset
                                 cvDatDictionary1[cvkey].m_VMO.Add(morphItem, morphOffset.Offset);
                             }
                             else
                             {
+                                // If yes, accumulate the offset value for the existing morph entry
                                 cvDatDictionary1[cvkey].m_VMO[morphItem] += morphOffset.Offset;
                             }
                         }
                     }
                 }
+
                 if (!morphItem.IsUV)
                     continue;
 
                 foreach (IPXUVMorphOffset morphOffset in morphItem.Offsets)
                 {
+                    // Create a CVSet as a key for the current morph offset's vertex
                     CVSet cvkey = new CVSet(morphOffset.Vertex);
+
+                    // Check if the CVSet key is present in cvDatDictionary1
                     if (cvDatDictionary1.ContainsKey(cvkey))
                     {
+                        // Check if the morph is already recorded for the current CVSet
                         if (!cvDatDictionary1[cvkey].m_UVMO.ContainsKey(morphItem))
                         {
+                            // If not, add a new entry for the morph with its offset
                             cvDatDictionary1[cvkey].m_UVMO.Add(morphItem, morphOffset.Offset);
                         }
                         else
                         {
+                            // If yes, accumulate the offset value for the existing morph entry
                             cvDatDictionary1[cvkey].m_UVMO[morphItem] += morphOffset.Offset;
                         }
                     }
                 }
             }
 
+
             progressBar1.PerformStep();
 
+            // Iterate through each face index in the list
             foreach (int faceIndice in faceIndiceList)
             {
+                // Process each vertex pair of the current face
                 for (int m = 0; m < 3; m++)
                 {
+                    // Create a CVSet representing a pair of adjacent vertices in the current face
                     CVSet cVSet2 = new CVSet(new IPXVertex[2]
                     {
                         vertex[face[3 * faceIndice + m]],
                         vertex[face[3 * faceIndice + (m + 1) % 3]]
                     });
+
+                    // Check if the pair is already present in cvDatDictionary2
                     if (cvDatDictionary2.ContainsKey(cVSet2))
                     {
+                        // If present, skip to the next iteration
                         continue;
                     }
+
+                    // If not present, create a new CVDat object
                     CVDat cVDat = new CVDat(bdx);
+
+                    // Calculate average values for the vertices in cVSet2 using specific functions
                     Ifunc.CalcAverage_NonOverlapable(cVSet2.Separate(), cvDatDictionary1, cVDat);
                     Ifunc.CalcAverage_Overlapable(cVSet2.Separate(), cvDatDictionary1, cVDat);
+
+                    // Add the new CVSet and corresponding CVDat to cvDatDictionary2
                     cvDatDictionary2.Add(cVSet2, cVDat);
+
+                    // Optionally, if duplicate merging is enabled, update mergeDuplicatesDictionary
                     if (checkBoxMergeDuplicates.Checked && checkBoxMergeDuplicates.Enabled)
                     {
                         CEPosKey key4 = new CEPosKey(cVSet2);
@@ -226,44 +314,66 @@ namespace PECSScriptPlugin
                         mergeDuplicatesDictionary[key4].Add(cVSet2);
                     }
                 }
+
+                // Check the state of the "Add" radio button
                 if (radioButtonAdd.Checked)
                 {
+                    // If checked, skip the remaining steps and continue to the next iteration
                     continue;
                 }
+
+                // Process the case where "Add" is not checked
+                // Create a CVSet representing the three vertices of the current face
                 CVSet cVSet3 = new CVSet(new IPXVertex[3]
                 {
                     vertex[face[3 * faceIndice]],
                     vertex[face[3 * faceIndice + 1]],
                     vertex[face[3 * faceIndice + 2]]
                 });
+
+                // Check if cVSet3 is already present in cvDatDictionary3
                 if (!cvDatDictionary3.ContainsKey(cVSet3))
                 {
+                    // If not present, create a new CVDat object
                     CVDat cVDat2 = new CVDat(bdx);
+
+                    // Calculate average values for the vertices in cVSet3 using specific functions
                     Ifunc.CalcAverage_NonOverlapable(cVSet3.Separate(), cvDatDictionary1, cVDat2);
                     Ifunc.CalcAverage_Overlapable(cVSet3.Separate(), cvDatDictionary1, cVDat2);
+
+                    // Add the new CVSet and corresponding CVDat to cvDatDictionary3
                     cvDatDictionary3.Add(cVSet3, cVDat2);
                 }
+
+                // Process each edge of the current face
                 for (int n = 0; n < 3; n++)
                 {
+                    // Create a CVSet representing a pair of adjacent vertices in the current face
                     CVSet cVSet4 = new CVSet(new IPXVertex[2]
                     {
                         vertex[face[3 * faceIndice + n]],
                         vertex[face[3 * faceIndice + (n + 1) % 3]]
                     });
+
                     if (!radioButtonSoft.Checked || (checkBoxRollUp.Checked && checkBoxRollUp.Enabled))
                     {
+                        // Update cvRollupDictionary with the current CVSet4 and cVSet3
                         if (!cvRollupDictionary.ContainsKey(cVSet4))
                         {
                             cvRollupDictionary.Add(cVSet4, new HashSet<CVSet>());
                         }
                         cvRollupDictionary[cVSet4].Add(cVSet3);
                     }
+
+                    // Create CVSet keys for vertices and edge vertices
                     CVSet key5 = new CVSet(vertex[face[3 * faceIndice + n]]);
                     CVSet item = new CVSet(new IPXVertex[2]
                     {
                         vertex[face[3 * faceIndice + n]],
                         vertex[face[3 * faceIndice + (n + 2) % 3]]
                     });
+
+                    // Update dictionary8 with information related to vertices and edges
                     if (!dictionary8.ContainsKey(key5))
                     {
                         dictionary8.Add(key5, new CEFKeys());
@@ -273,6 +383,7 @@ namespace PECSScriptPlugin
                     dictionary8[key5].m_EdgeKeys.Add(item);
                 }
             }
+
 
             progressBar1.PerformStep();
 
@@ -555,23 +666,37 @@ namespace PECSScriptPlugin
             materialIndice = 0;
             j = material[materialIndice].Faces.Count();
 
+            // Iterate through each face index in the list
             foreach (int faceIndice in faceIndiceList)
             {
+                // Find the correct material index and update the loop variable 'j'
                 for (; faceIndice >= j; j += material[++materialIndice].Faces.Count)
                 {
+                    // Empty loop body for adjusting 'j'
                 }
+
+                // Create CVSets for the three vertices of the current face
                 CVSet key7 = new CVSet(vertex[face[3 * faceIndice]]);
                 CVSet key8 = new CVSet(vertex[face[3 * faceIndice + 1]]);
                 CVSet key9 = new CVSet(vertex[face[3 * faceIndice + 2]]);
+
+                // Check the state of the "Soft" radio button
                 if (radioButtonSoft.Checked)
                 {
+                    // Create a new face and assign its vertices based on the dictionaries
                     IPXFace iPXFace = bdx.Face();
                     iPXFace.Vertex1 = dictionary10[key7].m_v;
                     iPXFace.Vertex2 = dictionary10[key8].m_v;
                     iPXFace.Vertex3 = dictionary10[key9].m_v;
+
+                    // Add the face to the corresponding material
                     materialsDictionary[material[materialIndice]].Faces.Add(iPXFace);
+
+                    // Continue to the next iteration
                     continue;
                 }
+
+                // Create CVSets for additional vertex pairs in the current face
                 CVSet key10 = new CVSet(new IPXVertex[2]
                 {
                     vertex[face[3 * faceIndice]],
@@ -587,6 +712,8 @@ namespace PECSScriptPlugin
                     vertex[face[3 * faceIndice + 2]],
                     vertex[face[3 * faceIndice]]
                 });
+
+                // Create new faces and assign their vertices based on the dictionaries
                 IPXFace iPXFace2 = bdx.Face();
                 IPXFace iPXFace3 = bdx.Face();
                 IPXFace iPXFace4 = bdx.Face();
@@ -603,11 +730,14 @@ namespace PECSScriptPlugin
                 iPXFace5.Vertex1 = dictionary9[key10].m_v;
                 iPXFace5.Vertex2 = dictionary9[key11].m_v;
                 iPXFace5.Vertex3 = dictionary9[key12].m_v;
+
+                // Add the faces to the corresponding material
                 materialsDictionary[material[materialIndice]].Faces.Add(iPXFace2);
                 materialsDictionary[material[materialIndice]].Faces.Add(iPXFace3);
                 materialsDictionary[material[materialIndice]].Faces.Add(iPXFace4);
                 materialsDictionary[material[materialIndice]].Faces.Add(iPXFace5);
             }
+
             progressBar1.PerformStep();
             update();
             SystemSounds.Beep.Play();
