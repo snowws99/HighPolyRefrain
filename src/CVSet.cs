@@ -50,9 +50,8 @@ namespace PECSScriptPlugin
 		public override bool Equals(object obj)
 		{
 			if (obj == null || GetType() != obj.GetType())
-			{
 				return false;
-			}
+
 			HashSet<IPXVertex> hashSet = new HashSet<IPXVertex>(m_vset);
 			hashSet.SymmetricExceptWith(((CVSet)obj).m_vset);
 			return hashSet.Count == 0;
@@ -60,12 +59,12 @@ namespace PECSScriptPlugin
 
 		public override int GetHashCode()
 		{
-			int num = 0;
+			int hash = 0;
 			foreach (IPXVertex item in m_vset)
 			{
-				num ^= item.GetHashCode();
+				hash ^= item.GetHashCode();
 			}
-			return num;
+			return hash;
 		}
 	}
 }

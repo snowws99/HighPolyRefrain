@@ -4,6 +4,7 @@ using PEPlugin.SDX;
 
 namespace PECSScriptPlugin
 {
+
 	internal class CEPosKey
 	{
 		public V3 m_Pos1;

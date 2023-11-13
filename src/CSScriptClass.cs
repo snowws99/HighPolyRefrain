@@ -16,8 +16,8 @@ namespace PECSScriptPlugin
 			base.Run(args);
 			try
 			{
-				myForm myForm2 = new myForm(args);
-				myForm2.Show();
+				mainForm form = new mainForm(args);
+				form.Show();
 			}
 			catch (Exception ex)
 			{

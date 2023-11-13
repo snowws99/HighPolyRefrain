@@ -18,8 +18,8 @@ namespace PECSScriptPlugin
 			Out.m_v.UVA4 = new V4(0f, 0f, 0f, 0f);
 			Out.m_v.EdgeScale = 0f;
 			Out.m_UVMO.Clear();
-			int count = keys.Count;
-			Dictionary<IPXMorph, V4> dictionary = new Dictionary<IPXMorph, V4>();
+			int keyCount = keys.Count;
+			Dictionary<IPXMorph, V4> morphDictionary = new Dictionary<IPXMorph, V4>();
 			foreach (CVSet key in keys)
 			{
 				Out.m_v.UV += dic[key].m_v.UV;
@@ -28,27 +28,28 @@ namespace PECSScriptPlugin
 				Out.m_v.UVA3 += dic[key].m_v.UVA3;
 				Out.m_v.UVA4 += dic[key].m_v.UVA4;
 				Out.m_v.EdgeScale += dic[key].m_v.EdgeScale;
-				foreach (IPXMorph key2 in dic[key].m_UVMO.Keys)
+				foreach (IPXMorph morph in dic[key].m_UVMO.Keys)
 				{
-					if (dictionary.ContainsKey(key2))
+					if (morphDictionary.ContainsKey(morph))
 					{
-						dictionary[key2] += dic[key].m_UVMO[key2];
+						morphDictionary[morph] += dic[key].m_UVMO[morph];
 					}
 					else
 					{
-						dictionary.Add(key2, dic[key].m_UVMO[key2]);
+						morphDictionary.Add(morph, dic[key].m_UVMO[morph]);
 					}
 				}
 			}
-			Out.m_v.UV /= (float)count;
-			Out.m_v.UVA1 /= (float)count;
-			Out.m_v.UVA2 /= (float)count;
-			Out.m_v.UVA3 /= (float)count;
-			Out.m_v.UVA4 /= (float)count;
-			Out.m_v.EdgeScale /= count;
-			foreach (IPXMorph key3 in dictionary.Keys)
+			Out.m_v.UV /= (float)keyCount;
+			Out.m_v.UVA1 /= (float)keyCount;
+			Out.m_v.UVA2 /= (float)keyCount;
+			Out.m_v.UVA3 /= (float)keyCount;
+			Out.m_v.UVA4 /= (float)keyCount;
+			Out.m_v.EdgeScale /= keyCount;
+
+			foreach (IPXMorph morph in morphDictionary.Keys)
 			{
-				Out.m_UVMO.Add(key3, dictionary[key3] / count);
+				Out.m_UVMO.Add(morph, morphDictionary[morph] / keyCount);
 			}
 		}
 
@@ -62,122 +63,126 @@ namespace PECSScriptPlugin
 			Out.m_v.SDEF_C = new V3(0f, 0f, 0f);
 			Out.m_v.SDEF_R0 = new V3(0f, 0f, 0f);
 			Out.m_v.SDEF_R1 = new V3(0f, 0f, 0f);
-			int count = keys.Count;
-			Dictionary<IPXBone, float> dictionary = new Dictionary<IPXBone, float>();
-			Dictionary<IPXMorph, V3> dictionary2 = new Dictionary<IPXMorph, V3>();
+			int keyCount = keys.Count;
+			Dictionary<IPXBone, float> boneDictionary = new Dictionary<IPXBone, float>();
+			Dictionary<IPXMorph, V3> morphDictionary = new Dictionary<IPXMorph, V3>();
 			foreach (CVSet key in keys)
 			{
 				Out.m_v.Position += dic[key].m_v.Position;
 				Out.m_v.Normal += dic[key].m_v.Normal;
-				if (dictionary.ContainsKey(dic[key].m_v.Bone1))
+				if (boneDictionary.ContainsKey(dic[key].m_v.Bone1))
 				{
-					dictionary[dic[key].m_v.Bone1] += dic[key].m_v.Weight1;
+					boneDictionary[dic[key].m_v.Bone1] += dic[key].m_v.Weight1;
 				}
 				else
 				{
-					dictionary.Add(dic[key].m_v.Bone1, dic[key].m_v.Weight1);
+					boneDictionary.Add(dic[key].m_v.Bone1, dic[key].m_v.Weight1);
 				}
 				if (dic[key].m_v.Bone2 != null)
 				{
-					if (dictionary.ContainsKey(dic[key].m_v.Bone2))
+					if (boneDictionary.ContainsKey(dic[key].m_v.Bone2))
 					{
-						dictionary[dic[key].m_v.Bone2] += dic[key].m_v.Weight2;
+						boneDictionary[dic[key].m_v.Bone2] += dic[key].m_v.Weight2;
 					}
 					else
 					{
-						dictionary.Add(dic[key].m_v.Bone2, dic[key].m_v.Weight2);
+						boneDictionary.Add(dic[key].m_v.Bone2, dic[key].m_v.Weight2);
 					}
 					if (dic[key].m_v.Bone3 != null)
 					{
-						if (dictionary.ContainsKey(dic[key].m_v.Bone3))
+						if (boneDictionary.ContainsKey(dic[key].m_v.Bone3))
 						{
-							dictionary[dic[key].m_v.Bone3] += dic[key].m_v.Weight3;
+							boneDictionary[dic[key].m_v.Bone3] += dic[key].m_v.Weight3;
 						}
 						else
 						{
-							dictionary.Add(dic[key].m_v.Bone3, dic[key].m_v.Weight3);
+							boneDictionary.Add(dic[key].m_v.Bone3, dic[key].m_v.Weight3);
 						}
 						if (dic[key].m_v.Bone4 != null)
 						{
-							if (dictionary.ContainsKey(dic[key].m_v.Bone4))
+							if (boneDictionary.ContainsKey(dic[key].m_v.Bone4))
 							{
-								dictionary[dic[key].m_v.Bone4] += dic[key].m_v.Weight4;
+								boneDictionary[dic[key].m_v.Bone4] += dic[key].m_v.Weight4;
 							}
 							else
 							{
-								dictionary.Add(dic[key].m_v.Bone4, dic[key].m_v.Weight4);
+								boneDictionary.Add(dic[key].m_v.Bone4, dic[key].m_v.Weight4);
 							}
 						}
 					}
 				}
 				foreach (IPXMorph key2 in dic[key].m_VMO.Keys)
 				{
-					if (dictionary2.ContainsKey(key2))
+					if (morphDictionary.ContainsKey(key2))
 					{
-						dictionary2[key2] += dic[key].m_VMO[key2];
+						morphDictionary[key2] += dic[key].m_VMO[key2];
 					}
 					else
 					{
-						dictionary2.Add(key2, dic[key].m_VMO[key2]);
+						morphDictionary.Add(key2, dic[key].m_VMO[key2]);
 					}
 				}
 			}
-			Out.m_v.Position /= (float)count;
+			Out.m_v.Position /= (float)keyCount;
 			WrapNormalize(Out.m_v.Normal);
-			int count2 = dictionary.Count;
-			int num = Math.Min(dictionary.Count, 4);
-			IPXBone[] array = dictionary.Keys.ToArray();
-			float[] array2 = dictionary.Values.ToArray();
-			Array.Sort(array2, array);
+			int boneCount = boneDictionary.Count;
+			//TODO investigate
+			int num = Math.Min(boneDictionary.Count, 4);
+			
+			IPXBone[] boneKeys = boneDictionary.Keys.ToArray();
+			float[] boneValues = boneDictionary.Values.ToArray();
+			Array.Sort(boneValues, boneKeys);
 			float num2 = 0f;
 			for (int i = 1; i <= num; i++)
 			{
-				num2 += array2[count2 - i];
+				num2 += boneValues[boneCount - i];
 			}
 			for (int j = 1; j <= num; j++)
 			{
-				array2[count2 - j] /= num2;
+				boneValues[boneCount - j] /= num2;
 			}
-			Out.m_v.Bone1 = array[count2 - 1];
-			Out.m_v.Weight1 = array2[count2 - 1];
+			Out.m_v.Bone1 = boneKeys[boneCount - 1];
+			Out.m_v.Weight1 = boneValues[boneCount - 1];
+
 			switch (num)
 			{
-			case 1:
-				Out.m_v.Bone2 = null;
-				Out.m_v.Weight2 = 0f;
-				Out.m_v.Bone3 = null;
-				Out.m_v.Weight3 = 0f;
-				Out.m_v.Bone4 = null;
-				Out.m_v.Weight4 = 0f;
-				break;
-			case 2:
-				Out.m_v.Bone2 = array[count2 - 2];
-				Out.m_v.Weight2 = array2[count2 - 2];
-				Out.m_v.Bone3 = null;
-				Out.m_v.Weight3 = 0f;
-				Out.m_v.Bone4 = null;
-				Out.m_v.Weight4 = 0f;
-				break;
-			case 3:
-				Out.m_v.Bone2 = array[count2 - 2];
-				Out.m_v.Weight2 = array2[count2 - 2];
-				Out.m_v.Bone3 = array[count2 - 3];
-				Out.m_v.Weight3 = array2[count2 - 3];
-				Out.m_v.Bone4 = null;
-				Out.m_v.Weight4 = 0f;
-				break;
-			default:
-				Out.m_v.Bone2 = array[count2 - 2];
-				Out.m_v.Weight2 = array2[count2 - 2];
-				Out.m_v.Bone3 = array[count2 - 3];
-				Out.m_v.Weight3 = array2[count2 - 3];
-				Out.m_v.Bone4 = array[count2 - 4];
-				Out.m_v.Weight4 = array2[count2 - 4];
-				break;
+				case 1:
+					Out.m_v.Bone2 = null;
+					Out.m_v.Weight2 = 0f;
+					Out.m_v.Bone3 = null;
+					Out.m_v.Weight3 = 0f;
+					Out.m_v.Bone4 = null;
+					Out.m_v.Weight4 = 0f;
+					break;
+				case 2:
+					Out.m_v.Bone2 = boneKeys[boneCount - 2];
+					Out.m_v.Weight2 = boneValues[boneCount - 2];
+					Out.m_v.Bone3 = null;
+					Out.m_v.Weight3 = 0f;
+					Out.m_v.Bone4 = null;
+					Out.m_v.Weight4 = 0f;
+					break;
+				case 3:
+					Out.m_v.Bone2 = boneKeys[boneCount - 2];
+					Out.m_v.Weight2 = boneValues[boneCount - 2];
+					Out.m_v.Bone3 = boneKeys[boneCount - 3];
+					Out.m_v.Weight3 = boneValues[boneCount - 3];
+					Out.m_v.Bone4 = null;
+					Out.m_v.Weight4 = 0f;
+					break;
+				default:
+					Out.m_v.Bone2 = boneKeys[boneCount - 2];
+					Out.m_v.Weight2 = boneValues[boneCount - 2];
+					Out.m_v.Bone3 = boneKeys[boneCount - 3];
+					Out.m_v.Weight3 = boneValues[boneCount - 3];
+					Out.m_v.Bone4 = boneKeys[boneCount - 4];
+					Out.m_v.Weight4 = boneValues[boneCount - 4];
+					break;
 			}
-			foreach (IPXMorph key3 in dictionary2.Keys)
+
+			foreach (IPXMorph morph in morphDictionary.Keys)
 			{
-				Out.m_VMO.Add(key3, dictionary2[key3] / count);
+				Out.m_VMO.Add(morph, morphDictionary[morph] / keyCount);
 			}
 		}
 
